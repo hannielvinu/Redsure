@@ -1,0 +1,18 @@
+# One-click deploy on Render: New > Blueprint > pick this repo, then fill in the secret values.
+services:
+  - type: web
+    name: redsure
+    runtime: node
+    plan: free
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /healthz
+    envVars:
+      - key: NEXCONN_APP_KEY
+        sync: false
+      - key: NEXCONN_APP_SECRET
+        sync: false
+      - key: NEXCONN_REGION
+        value: SG
+      - key: GROQ_API_KEY
+        sync: false

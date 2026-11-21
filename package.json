@@ -1,0 +1,34 @@
+{
+  "name": "redsure",
+  "version": "1.0.0",
+  "description": "Redsure: the blood request that knows when it is done. Live blood-request cards built on the Nexconn Chat SDK.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "start": "node server/index.js",
+    "test": "node --test test/*.test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hannielvinu/redsure.git"
+  },
+  "author": "Hanniel Vinu A",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/hannielvinu/redsure/issues"
+  },
+  "homepage": "https://github.com/hannielvinu/redsure#readme",
+  "dependencies": {
+    "@nexconn/chat": "^26.5.1",
+    "@nexconn/engine": "^26.5.1",
+    "express": "^4.22.3"
+  },
+  "devDependencies": {
+    "vite": "^5.4.21"
+  },
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  }
+}
