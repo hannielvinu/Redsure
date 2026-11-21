@@ -77,34 +77,31 @@ app.post('/api/rooms/join', auth, async (req, res) => {
 
 /* ---- Room index ----
    Nexconn group members only receive messages sent after they join. So each room keeps a list of
-   its request-card message IDs in the group's extended profile (10 keys × 256 chars ≈ 120 cards),
+   its latest request-card message IDs in the group's announcement field (1,024 chars, ~50 cards),
    and each card's live state is read from its message metadata. Nexconn stays the only database. */
 const roomIndex = new Map(); // roomId -> [messageId] oldest..newest
 let lastIndexSave = null;
-const IDX_KEYS = Array.from({ length: 10 }, (_, i) => `ext_i${i}`);
 
 async function getRoomIndex(room) {
   if (roomIndex.has(room)) return roomIndex.get(room);
-  const ext = (await nx.getGroupExt(room).catch(() => null)) || {};
-  const ids = IDX_KEYS.flatMap((k) => (ext[k] ? String(ext[k]).split(',') : [])).filter(Boolean);
+  const gp = (await nx.getGroupProfile(room).catch(() => null)) || {};
+  const ids = String(gp.announcement || '').split(',').filter((x) => /^[A-Z0-9-]{10,40}$/.test(x));
   roomIndex.set(room, ids);
   return ids;
 }
 
 async function saveIndex(room, ids) {
   const keep = [];
-  const chunks = IDX_KEYS.map(() => []);
-  // Newest first, packed until every key is full.
-  let k = 0;
-  for (const id of [...ids].reverse()) {
-    while (k < chunks.length && (chunks[k].join(',').length + id.length + 1) > 250) k++;
-    if (k >= chunks.length) break;
-    chunks[k].push(id);
+  for (const id of [...new Set(ids)].reverse()) {
+    if ([...keep, id].join(',').length > 1000) break;
     keep.unshift(id);
   }
   roomIndex.set(room, keep);
-  const ext = Object.fromEntries(IDX_KEYS.map((key, i) => [key, chunks[i].join(',')]));
-  const r = await nx.updateGroupExt(room, ext);
+  const city = CITIES.find((c) => roomId(c) === room) || '';
+  const r = await nx.updateGroupProfile(room, {
+    introduction: `Live blood requests in ${city}. Requests update themselves. Never pay anyone for blood.`,
+    announcement: keep.join(','),
+  });
   lastIndexSave = { room, code: r.code, msg: r.errorMessage || r.msg || null, at: Date.now() };
   return r;
 }
@@ -292,8 +289,7 @@ app.get('/api/stats', async (_req, res) => {
     const r = await nx.call('/v4/group-channel/profile/list', { channelIds: ids });
     const rooms = Object.fromEntries((r.result?.profiles || []).map((p) => [p.channelId, p.memberCount ?? null]));
     const total = Object.values(rooms).reduce((a, n) => a + (Number(n) || 0), 0);
-    const sample = (r.result?.profiles || []).find((p) => p.channelId === 'rs_chennai');
-    res.set('Cache-Control', 'no-store').json({ roomMembers: rooms, totalRoomMemberships: total, at: new Date().toISOString(), indexDebug: sample || null, lastIndexSave });
+    res.set('Cache-Control', 'no-store').json({ roomMembers: rooms, totalRoomMemberships: total, at: new Date().toISOString(), lastIndexSave });
   } catch (e) {
     res.status(502).json({ error: String(e.message || e) });
   }
