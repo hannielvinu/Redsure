@@ -72,6 +72,8 @@ Tests: `npm test`.
 
 Built from scratch for the Nexconn Build Challenge 2026.
 
+
+
 ## License
 
 MIT
