@@ -1,0 +1,11 @@
+# Render's free plan sleeps after 15 minutes idle. Ping the app so reviewers never wait for a cold start.
+name: keep-alive
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - run: curl -fsS -m 90 https://redsure.onrender.com/healthz || true

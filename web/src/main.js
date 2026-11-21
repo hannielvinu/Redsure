@@ -155,6 +155,7 @@ function renderOnboarding(city) {
         <button class="btn red block" style="margin-top:18px" id="go">Continue</button>
         <div class="err" id="err"></div>
         <p class="hint">No phone number, no password. We only use your first name inside chats.</p>
+        <p class="hint">Tip for reviewers: open Redsure in two windows (one normal, one incognito) to play the family and the donor.</p>
       </form>
     </div>`;
   let pickedCity = city && CITIES.includes(city) ? city : 'Chennai';
@@ -392,7 +393,14 @@ function renderFeedOnly() {
 function feedHtml() {
   const items = [...S.feed.values()].sort((a, b) => a.time - b.time);
   if (!items.length)
-    return `<div class="empty"><b>No requests in ${h(S.room.city)} right now.</b>When someone posts, it appears here live. Tap <b>Request blood</b> to post one.</div>`;
+    return `<div class="empty"><b>No open requests in ${h(S.room.city)} right now.</b>When someone posts, it appears here live.</div>
+      <div class="how">
+        <div><span>1</span><p><b>Post once.</b> Tap <b>Request blood</b>: one live card goes to everyone in ${h(S.room.city)}.</p></div>
+        <div><span>2</span><p><b>Share the live link.</b> It shows the current status wherever it is forwarded.</p></div>
+        <div><span>3</span><p><b>Donors offer privately.</b> “I can donate” opens a chat. No phone numbers.</p></div>
+        <div><span>4</span><p><b>It closes itself.</b> “Fulfilled, please don’t call” updates everywhere.</p></div>
+      </div>
+      <p class="hint center">Trying Redsure alone? Open this site in a second (incognito) window as a donor to see cards update live between the two.</p>`;
   const openCount = [...S.cards.values()].filter((c) => liveStatus(c.meta).state === 'open').length;
   return `<div class="sys">${openCount} open request${openCount === 1 ? '' : 's'} in ${h(S.room.city)} · cards update themselves</div>` +
     items.map((it) => (it.type === CARD_TYPE ? cardHtml(S.cards.get(it.id)) : lineHtml(it))).join('');
@@ -433,7 +441,7 @@ function cardHtml(c) {
         <div class="bg">${h(m.bg)}</div>
         <div style="flex:1;min-width:0">
           <span class="status ${st.state}">${st.state === 'open' ? '<i class="live"></i>' : ''}${h(st.label)}</span>
-          <div class="card-title ellipsis">${h(st.units)} unit${st.units > 1 ? 's' : ''} · ${h(m.hospital)}</div>
+          <div class="card-title">${h(st.units)} unit${st.units > 1 ? 's' : ''} · ${h(m.hospital)}</div>
           <div class="meta"><span>by ${mine ? 'you' : h(m.ownerName || 'family')}</span><span>${ago(Number(m.createdAt || c.time))}</span>${st.state === 'open' ? `<span>⏱ ${timeLeft(Number(m.neededBy))}</span>` : ''}</div>
         </div>
       </div>

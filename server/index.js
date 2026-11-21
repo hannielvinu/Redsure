@@ -303,6 +303,20 @@ app.get('/api/stats', async (_req, res) => {
   }
 });
 
+app.get('/stats', (_req, res) => {
+  res.type('html').send(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Redsure · usage</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poppins:wght@800&display=swap">
+<style>body{margin:0;background:#f7f6f4;font:15px/1.5 Inter,sans-serif;color:#16161a}main{max-width:560px;margin:0 auto;padding:28px 16px}
+h1{font:800 26px Poppins,sans-serif;margin:0 0 4px}.big{font:800 64px/1 Poppins,sans-serif;color:#c8102e;margin:18px 0 4px}
+.box{background:#fff;border-radius:16px;padding:16px;box-shadow:0 6px 20px rgba(0,0,0,.06);margin:14px 0}table{width:100%;border-collapse:collapse}td{padding:6px 0;border-bottom:1px solid #eee}td:last-child{text-align:right;font-weight:700}.m{color:#6b7280;font-size:13px}a{color:#c8102e}</style></head>
+<body><main><h1>Redsure usage</h1><div class="m">Read live from Nexconn group membership · <span id="at"></span></div>
+<div class="box"><div class="big" id="n">…</div><b>people have joined Redsure city rooms</b><div class="m">Our own build-and-test accounts (<span id="t"></span>) are excluded.</div></div>
+<div class="box"><b>By city room</b><table id="rooms"></table><div class="m" style="margin-top:8px">Room counts include test accounts. Someone who switches city is counted in each room.</div></div>
+<p class="m"><a href="/">Open Redsure</a></p></main>
+<script>fetch('/api/stats').then(r=>r.json()).then(d=>{n.textContent=d.otherPeople;t.textContent=d.teamTestAccounts;at.textContent=new Date(d.at).toLocaleString();
+rooms.innerHTML=Object.entries(d.roomMembers).sort((a,b)=>b[1]-a[1]).map(([k,v])=>'<tr><td>'+k.replace('rs_','').replace(/^./,c=>c.toUpperCase())+'</td><td>'+v+'</td></tr>').join('')}).catch(()=>{n.textContent='–'})</script></body></html>`);
+});
+
 app.get('/healthz', (_req, res) => res.json({ ok: true, nexconn: nx.configured }));
 
 // Share links get live link-preview tags, so a WhatsApp preview already says "2 of 3 arranged" or "Fulfilled".
