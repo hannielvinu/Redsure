@@ -144,8 +144,10 @@ app.get('/api/rooms/:roomId/cards', async (req, res) => {
   }
 });
 
+let lastMetaError = null;
 async function loadCard(messageId) {
   const r = await nx.getMetadata(messageId);
+  if (r.code !== 0) lastMetaError = { code: r.code, raw: r.raw };
   if (r.code !== 0 || !r.metadata || !r.metadata.bg) return null;
   return r.metadata;
 }
@@ -216,7 +218,7 @@ app.post('/api/requests/update', auth, async (req, res) => {
 app.get('/api/public/:channelId/:messageId', async (req, res) => {
   try {
     const m = await loadCard(req.params.messageId);
-    if (!m) return res.status(404).json({ error: 'This request link is not valid.' });
+    if (!m) return res.status(404).json({ error: 'This request link is not valid.', nexconn: lastMetaError });
     res.set('Cache-Control', 'no-store');
     res.json(publicView(m));
   } catch (e) {

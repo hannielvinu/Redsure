@@ -115,7 +115,7 @@ export class Nexconn {
 
   async getMetadata(messageId) {
     const r = await this.call('/v4/channel-type/message/metadata/list', { messageId });
-    if (r.code !== 0) return { code: r.code, metadata: null };
+    if (r.code !== 0) return { code: r.code, metadata: null, raw: r };
     const out = {};
     const raw = r.result?.metadata ?? {};
     // The API returns either an object keyed by name or an array of {key, value}.
