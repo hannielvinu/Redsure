@@ -289,7 +289,8 @@ app.get('/api/stats', async (_req, res) => {
     const r = await nx.call('/v4/group-channel/profile/list', { channelIds: ids });
     const rooms = Object.fromEntries((r.result?.profiles || []).map((p) => [p.channelId, p.memberCount ?? null]));
     const total = Object.values(rooms).reduce((a, n) => a + (Number(n) || 0), 0);
-    res.set('Cache-Control', 'no-store').json({ roomMembers: rooms, totalRoomMemberships: total, at: new Date().toISOString() });
+    const sample = (r.result?.profiles || []).find((p) => p.channelId === 'rs_chennai');
+    res.set('Cache-Control', 'no-store').json({ roomMembers: rooms, totalRoomMemberships: total, at: new Date().toISOString(), indexDebug: sample ? { type: typeof sample.groupExtProfile, value: sample.groupExtProfile } : null });
   } catch (e) {
     res.status(502).json({ error: String(e.message || e) });
   }
