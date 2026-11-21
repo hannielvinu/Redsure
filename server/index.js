@@ -80,6 +80,7 @@ app.post('/api/rooms/join', auth, async (req, res) => {
    its request-card message IDs in the group's extended profile (10 keys × 256 chars ≈ 120 cards),
    and each card's live state is read from its message metadata. Nexconn stays the only database. */
 const roomIndex = new Map(); // roomId -> [messageId] oldest..newest
+let lastIndexSave = null;
 const IDX_KEYS = Array.from({ length: 10 }, (_, i) => `ext_i${i}`);
 
 async function getRoomIndex(room) {
@@ -103,7 +104,9 @@ async function saveIndex(room, ids) {
   }
   roomIndex.set(room, keep);
   const ext = Object.fromEntries(IDX_KEYS.map((key, i) => [key, chunks[i].join(',')]));
-  return nx.updateGroupExt(room, ext);
+  const r = await nx.updateGroupExt(room, ext);
+  lastIndexSave = { room, code: r.code, msg: r.errorMessage || r.msg || null, at: Date.now() };
+  return r;
 }
 
 const metaCache = new Map(); // messageId -> { at, m }
@@ -290,7 +293,7 @@ app.get('/api/stats', async (_req, res) => {
     const rooms = Object.fromEntries((r.result?.profiles || []).map((p) => [p.channelId, p.memberCount ?? null]));
     const total = Object.values(rooms).reduce((a, n) => a + (Number(n) || 0), 0);
     const sample = (r.result?.profiles || []).find((p) => p.channelId === 'rs_chennai');
-    res.set('Cache-Control', 'no-store').json({ roomMembers: rooms, totalRoomMemberships: total, at: new Date().toISOString(), indexDebug: sample ? { type: typeof sample.groupExtProfile, value: sample.groupExtProfile } : null });
+    res.set('Cache-Control', 'no-store').json({ roomMembers: rooms, totalRoomMemberships: total, at: new Date().toISOString(), indexDebug: sample || null, lastIndexSave });
   } catch (e) {
     res.status(502).json({ error: String(e.message || e) });
   }
