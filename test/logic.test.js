@@ -41,3 +41,14 @@ test('money guard catches fee asks', () => {
   assert.ok(MONEY_RE.test('Pay convenience fee first'));
   assert.ok(!MONEY_RE.test('I will reach the blood bank at 6 pm'));
 });
+
+test('server module loads and starts', async () => {
+  const { spawn } = await import('node:child_process');
+  const p = spawn(process.execPath, ['server/index.js'], { env: { ...process.env, PORT: '3987' } });
+  let out = '';
+  p.stdout.on('data', (d) => (out += d));
+  p.stderr.on('data', (d) => (out += d));
+  await new Promise((r) => setTimeout(r, 1500));
+  p.kill();
+  assert.match(out, /Redsure on :3987/);
+});

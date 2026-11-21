@@ -82,7 +82,7 @@ app.post('/api/rooms/join', auth, async (req, res) => {
 const roomIndex = new Map(); // roomId -> [messageId] oldest..newest
 const IDX_KEYS = Array.from({ length: 10 }, (_, i) => `ext_i${i}`);
 
-async function getIndex(room) {
+async function getRoomIndex(room) {
   if (roomIndex.has(room)) return roomIndex.get(room);
   const ext = (await nx.getGroupExt(room).catch(() => null)) || {};
   const ids = IDX_KEYS.flatMap((k) => (ext[k] ? String(ext[k]).split(',') : [])).filter(Boolean);
@@ -121,7 +121,7 @@ app.post('/api/requests/register', auth, async (req, res) => {
     if (!/^rs_[a-z]+$/.test(channelId || '')) return res.status(400).json({ error: 'Unknown room' });
     const m = await loadCard(messageId);
     if (!m || m.owner !== req.userId) return res.status(403).json({ error: 'Not your request' });
-    const ids = await getIndex(channelId);
+    const ids = await getRoomIndex(channelId);
     if (!ids.includes(messageId)) {
       const r = await saveIndex(channelId, [...ids, messageId]);
       if (r.code !== 0) return res.status(502).json({ error: 'Nexconn group profile error', detail: r });
@@ -136,7 +136,7 @@ app.get('/api/rooms/:roomId/cards', async (req, res) => {
   try {
     const room = req.params.roomId;
     if (!/^rs_[a-z]+$/.test(room)) return res.status(400).json({ error: 'Unknown room' });
-    const ids = (await getIndex(room)).slice(-40);
+    const ids = (await getRoomIndex(room)).slice(-40);
     const cards = await Promise.all(ids.map(async (id) => ({ messageId: id, channelId: room, metadata: await cachedCard(id) })));
     res.set('Cache-Control', 'no-store').json({ cards: cards.filter((c) => c.metadata) });
   } catch (e) {
