@@ -303,7 +303,10 @@ function ingest(m, live) {
     if (m.messageType === CARD_TYPE) {
       const meta = mapToObj(m.metadata);
       rememberName(meta.owner, meta.ownerName);
-      S.cards.set(m.messageId, { id: m.messageId, channelId: ci.channelId, content, meta, time: m.sentTime, sender: m.senderUserId });
+      const prev = S.cards.get(m.messageId);
+      if (prev) Object.assign(prev.meta, meta);
+      else S.cards.set(m.messageId, { id: m.messageId, channelId: ci.channelId, content, meta, time: m.sentTime, sender: m.senderUserId });
+      if (!S.cards.get(m.messageId).meta.bg) return; // not a readable card
       if (live) S.flash.add(m.messageId);
     }
     if (m.messageType === CARD_TYPE || m.messageType === 'RC:TxtMsg') S.feed.set(m.messageId, item);
@@ -576,22 +579,22 @@ function openRequestForm(prefill = {}) {
       const btn = el.querySelector('#post');
       btn.disabled = true;
       btn.textContent = 'Posting…';
-      const now = Date.now();
-      const meta = {
-        v: '1', bg, units: String(units), hospital, city: S.room.city, note,
-        neededBy: String(now + hours * 3600000), createdAt: String(now), updatedAt: String(now),
-        owner: S.session.userId, ownerName: S.session.name, status: 'open', arranged: '0', pledged: '0',
-      };
-      const p = new SendMessageParams({ bg, units, hospital, city: S.room.city, note, senderUserInfo: { userId: S.session.userId, name: S.session.name } }, CARD_TYPE);
-      // Live state lives in Nexconn message metadata: the card updates in place for every member and every share link.
-      p.metadata = meta;
-      const r = await new GroupChannel(S.room.id).sendMessage(p);
-      if (r.code !== 0) { btn.disabled = false; btn.textContent = 'Post live request'; return (err.textContent = `Could not post (code ${r.code}).`); }
-      ingest(r.data, false);
-      const c = S.cards.get(r.data.messageId);
-      if (c) Object.assign(c.meta, meta);
-      // Add it to the room index so people who join the room later also see it.
-      api('/api/requests/register', authBody({ channelId: S.room.id, messageId: r.data.messageId })).catch(() => null);
+      let r;
+      try {
+        // Our server sends the card through the Nexconn Platform Chat API (custom message + metadata).
+        r = await api('/api/requests/create', authBody({ city: S.room.city, bg, units, hospital, hours, note, name: S.session.name }));
+      } catch (x) {
+        btn.disabled = false; btn.textContent = 'Post live request';
+        return (err.textContent = x.message);
+      }
+      const t = Number(r.metadata.createdAt);
+      const existing = S.cards.get(r.messageId);
+      if (existing) Object.assign(existing.meta, r.metadata);
+      else {
+        S.cards.set(r.messageId, { id: r.messageId, channelId: r.channelId, content: {}, meta: { ...r.metadata }, time: t, sender: S.session.userId });
+        S.feed.set(r.messageId, { id: r.messageId, type: CARD_TYPE, sender: S.session.userId, time: t, content: {} });
+      }
+      const c = S.cards.get(r.messageId);
       close();
       S.tab = 'room';
       render();

@@ -5,7 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Nexconn } from './nexconn.js';
 import { readForward, normaliseGroup } from './forward.js';
-import { CITIES, roomId, liveStatus, publicView } from './shared.js';
+import { CITIES, BLOOD_GROUPS, CARD_TYPE, MONEY_RE, roomId, liveStatus, publicView } from './shared.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DIST = path.join(__dirname, '..', 'web', 'dist');
@@ -114,6 +114,48 @@ async function cachedCard(messageId) {
   metaCache.set(messageId, { at: Date.now(), m });
   return m;
 }
+
+// The family posts a request. The server validates it, sends the card into the city room through the
+// Platform Chat API (custom message + metadata) and adds it to the room index. The owner is set here, so it can't be forged.
+app.post('/api/requests/create', auth, async (req, res) => {
+  try {
+    const { city, bg, units, hospital, hours, note, name } = req.body;
+    if (!CITIES.includes(city)) return res.status(400).json({ error: 'Unknown city' });
+    if (!BLOOD_GROUPS.includes(bg)) return res.status(400).json({ error: 'Pick the blood group.' });
+    const u = Math.max(1, Math.min(10, Number(units) || 1));
+    const hosp = String(hospital || '').trim().slice(0, 80);
+    if (hosp.length < 3) return res.status(400).json({ error: 'Enter the hospital name.' });
+    const nt = String(note || '').trim().slice(0, 140);
+    if (/(\d[\s-]?){10}/.test(nt)) return res.status(400).json({ error: 'Please remove the phone number. Donors will message you here.' });
+    if (MONEY_RE.test(nt)) return res.status(400).json({ error: 'Please don’t mention money. Paid donation is illegal.' });
+    const hrs = [3, 6, 12, 24, 48].includes(Number(hours)) ? Number(hours) : 12;
+    const owner = req.userId;
+    const ownerName = String(name || 'Family').trim().slice(0, 40);
+    const room = roomId(city);
+    await ensureRoom(city, owner);
+    const now = Date.now();
+    const metadata = {
+      v: '1', bg, units: String(u), hospital: hosp, city, note: nt,
+      neededBy: String(now + hrs * 3600000), createdAt: String(now), updatedAt: String(now),
+      owner, ownerName, status: 'open', arranged: '0', pledged: '0',
+    };
+    const r = await nx.sendGroupCard({
+      fromUserId: owner,
+      channelId: room,
+      messageType: CARD_TYPE,
+      content: { bg, units: u, hospital: hosp, city, note: nt, senderUserInfo: { userId: owner, name: ownerName } },
+      metadata,
+      pushContent: `${bg} blood needed at ${hosp}`,
+    });
+    const messageId = r.result?.messageIds?.[0]?.messageId;
+    if (r.code !== 0 || !messageId) return res.status(502).json({ error: 'Nexconn send error', detail: r });
+    const ids = await getRoomIndex(room);
+    await saveIndex(room, [...ids, messageId]).catch(() => null);
+    res.json({ messageId, channelId: room, metadata });
+  } catch (e) {
+    res.status(502).json({ error: String(e.message || e) });
+  }
+});
 
 app.post('/api/requests/register', auth, async (req, res) => {
   try {

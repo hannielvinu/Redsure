@@ -101,6 +101,20 @@ export class Nexconn {
     return ext;
   }
 
+  // Server-side send of a group message with metadata; echoed to the sender's devices.
+  sendGroupCard({ fromUserId, channelId, messageType, content, metadata, pushContent }) {
+    return this.call('/v4/group-channel/message/send', {
+      fromUserId,
+      toChannelIds: [channelId],
+      messageType,
+      content: JSON.stringify(content),
+      pushContent,
+      isEchoToSender: 1,
+      hasMetadata: true,
+      metadata,
+    });
+  }
+
   // channelType: 1 = direct, 3 = group
   setMetadata({ messageId, userId, channelType = 3, channelId, metadata }) {
     return this.call('/v4/channel-type/message/metadata/set', {
