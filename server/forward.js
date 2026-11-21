@@ -75,7 +75,7 @@ export function ruleFlags(text, f) {
   if (!f.date) flags.push('no date in the message');
   if (!f.hospital) flags.push('no hospital named');
   if (MONEY_RE.test(text)) flags.push('mentions money, a fee or a payment');
-  if (/forward|share (?:to|in) all|maximum share|pls share/i.test(text)) flags.push('asks you to forward it to every group');
+  if (/forward|share (?:to|in) all|maximum share|share maximum|share max|pls share|please share/i.test(text)) flags.push('asks you to forward it to every group');
   if (/plasma|covid/i.test(text)) flags.push('plasma/COVID wording (common in recycled 2020-21 lists)');
   return flags;
 }

@@ -52,3 +52,9 @@ test('server module loads and starts', async () => {
   p.kill();
   assert.match(out, /Redsure on :3987/);
 });
+
+test('money guard: amount before currency, registration fee', () => {
+  assert.ok(MONEY_RE.test('Send 500 rs registration fee'));
+  assert.ok(!MONEY_RE.test('Please come to the blood bank by 6 pm.'));
+  assert.ok(!MONEY_RE.test('Hi Priya, I can donate for your B- request at Government General Hospital. When and where should I come?'));
+});

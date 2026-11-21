@@ -147,6 +147,7 @@ textarea.field { min-height: 130px; resize: vertical; }
 .pub.done .big { color: var(--green); }
 .pub .state { font: 800 26px/1.15 Poppins, sans-serif; margin: 10px 0 6px; }
 .pub .bar { height: 16px; }
+.pub.done .bar i.on { background: var(--green); }
 .pub-box { background: #fff; border-radius: 20px; padding: 20px; box-shadow: var(--shadow); }
 .safety { margin-top: 14px; font-size: 13px; color: #7a4a00; background: var(--amber-soft); border-radius: 12px; padding: 10px 12px; }
 .toast { position: fixed; left: 50%; bottom: 150px; transform: translateX(-50%); background: #16161a; color: #fff; padding: 10px 16px; border-radius: 12px; font-size: 14px; z-index: 40; max-width: 90vw; }

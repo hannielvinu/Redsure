@@ -51,8 +51,9 @@ export function publicView(m) {
 export function timeLeft(ts, now = Date.now()) {
   const d = ts - now;
   const a = Math.abs(d);
-  const h = Math.floor(a / 3600000);
-  const mi = Math.round((a % 3600000) / 60000);
+  const totalMin = Math.round(a / 60000);
+  const h = Math.floor(totalMin / 60);
+  const mi = totalMin % 60;
   const txt = h ? `${h}h ${mi}m` : `${mi}m`;
   return d >= 0 ? `${txt} left` : `${txt} ago`;
 }
@@ -66,4 +67,4 @@ export function ago(ts, now = Date.now()) {
 }
 
 // Paid blood donation is banned in India (since 1 Jan 1998). Any money ask in a donor chat is a red flag.
-export const MONEY_RE = /(\bupi\b|g ?pay|phone ?pe|paytm|\bpay\b|payment|transfer|send (?:me )?(?:rs|₹|money)|₹\s?\d|\brs\.?\s?\d|rupees|convenience fee|travel (?:fee|charge|cost)|advance|qr code|bank account|\bifsc\b)/i;
+export const MONEY_RE = /(\d+\s?(?:rs|rupees|inr)\b|\bfee\b|\bfees\b|\bcharges?\b|\bupi\b|g ?pay|phone ?pe|paytm|\bpay\b|payment|transfer|send (?:me )?(?:rs|₹|money)|₹\s?\d|\brs\.?\s?\d|rupees|convenience fee|travel (?:fee|charge|cost)|advance|qr code|bank account|\bifsc\b)/i;
