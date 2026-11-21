@@ -280,6 +280,17 @@ async function joinRoom(city) {
   const q = BaseChannel.createMessagesQuery({ channelIdentifier: new GroupChannelIdentifier(S.room.id), pageSize: 60, isAscending: false, startTime: Date.now() });
   const res = await q.loadNextPage();
   if (res.code === 0) for (const m of res.data?.data || res.data || []) ingest(m, false);
+  // Requests posted before this user joined: the room index lists them; their live state is message metadata.
+  try {
+    const { cards } = await api(`/api/rooms/${S.room.id}/cards`);
+    for (const c of cards) {
+      if (S.cards.has(c.messageId)) continue;
+      const t = Number(c.metadata.createdAt || 0);
+      rememberName(c.metadata.owner, c.metadata.ownerName);
+      S.cards.set(c.messageId, { id: c.messageId, channelId: c.channelId, content: {}, meta: c.metadata, time: t, sender: c.metadata.owner });
+      S.feed.set(c.messageId, { id: c.messageId, type: CARD_TYPE, sender: c.metadata.owner, time: t, content: {} });
+    }
+  } catch {}
 }
 
 function ingest(m, live) {
@@ -579,6 +590,8 @@ function openRequestForm(prefill = {}) {
       ingest(r.data, false);
       const c = S.cards.get(r.data.messageId);
       if (c) Object.assign(c.meta, meta);
+      // Add it to the room index so people who join the room later also see it.
+      api('/api/requests/register', authBody({ channelId: S.room.id, messageId: r.data.messageId })).catch(() => null);
       close();
       S.tab = 'room';
       render();

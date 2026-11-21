@@ -85,6 +85,22 @@ export class Nexconn {
     return this.call('/v4/group-channel/join', { channelId, userIds });
   }
 
+  updateGroupExt(channelId, groupExtProfile) {
+    return this.call('/v4/group-channel/profile/update', { channelId, groupExtProfile });
+  }
+
+  async getGroupExt(channelId) {
+    const r = await this.call('/v4/group-channel/profile/list', { channelIds: [channelId] });
+    if (r.code !== 0) return null;
+    const p = (r.result?.profiles || []).find((x) => x.channelId === channelId);
+    if (!p) return null;
+    let ext = p.groupExtProfile || {};
+    if (typeof ext === 'string') {
+      try { ext = JSON.parse(ext); } catch { ext = {}; }
+    }
+    return ext;
+  }
+
   // channelType: 1 = direct, 3 = group
   setMetadata({ messageId, userId, channelType = 3, channelId, metadata }) {
     return this.call('/v4/channel-type/message/metadata/set', {

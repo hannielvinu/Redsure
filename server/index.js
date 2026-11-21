@@ -75,6 +75,75 @@ app.post('/api/rooms/join', auth, async (req, res) => {
   }
 });
 
+/* ---- Room index ----
+   Nexconn group members only receive messages sent after they join. So each room keeps a list of
+   its request-card message IDs in the group's extended profile (10 keys × 256 chars ≈ 120 cards),
+   and each card's live state is read from its message metadata. Nexconn stays the only database. */
+const roomIndex = new Map(); // roomId -> [messageId] oldest..newest
+const IDX_KEYS = Array.from({ length: 10 }, (_, i) => `ext_i${i}`);
+
+async function getIndex(room) {
+  if (roomIndex.has(room)) return roomIndex.get(room);
+  const ext = (await nx.getGroupExt(room).catch(() => null)) || {};
+  const ids = IDX_KEYS.flatMap((k) => (ext[k] ? String(ext[k]).split(',') : [])).filter(Boolean);
+  roomIndex.set(room, ids);
+  return ids;
+}
+
+async function saveIndex(room, ids) {
+  const keep = [];
+  const chunks = IDX_KEYS.map(() => []);
+  // Newest first, packed until every key is full.
+  let k = 0;
+  for (const id of [...ids].reverse()) {
+    while (k < chunks.length && (chunks[k].join(',').length + id.length + 1) > 250) k++;
+    if (k >= chunks.length) break;
+    chunks[k].push(id);
+    keep.unshift(id);
+  }
+  roomIndex.set(room, keep);
+  const ext = Object.fromEntries(IDX_KEYS.map((key, i) => [key, chunks[i].join(',')]));
+  return nx.updateGroupExt(room, ext);
+}
+
+const metaCache = new Map(); // messageId -> { at, m }
+async function cachedCard(messageId) {
+  const c = metaCache.get(messageId);
+  if (c && Date.now() - c.at < 2500) return c.m;
+  const m = await loadCard(messageId).catch(() => null);
+  metaCache.set(messageId, { at: Date.now(), m });
+  return m;
+}
+
+app.post('/api/requests/register', auth, async (req, res) => {
+  try {
+    const { channelId, messageId } = req.body;
+    if (!/^rs_[a-z]+$/.test(channelId || '')) return res.status(400).json({ error: 'Unknown room' });
+    const m = await loadCard(messageId);
+    if (!m || m.owner !== req.userId) return res.status(403).json({ error: 'Not your request' });
+    const ids = await getIndex(channelId);
+    if (!ids.includes(messageId)) {
+      const r = await saveIndex(channelId, [...ids, messageId]);
+      if (r.code !== 0) return res.status(502).json({ error: 'Nexconn group profile error', detail: r });
+    }
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(502).json({ error: String(e.message || e) });
+  }
+});
+
+app.get('/api/rooms/:roomId/cards', async (req, res) => {
+  try {
+    const room = req.params.roomId;
+    if (!/^rs_[a-z]+$/.test(room)) return res.status(400).json({ error: 'Unknown room' });
+    const ids = (await getIndex(room)).slice(-40);
+    const cards = await Promise.all(ids.map(async (id) => ({ messageId: id, channelId: room, metadata: await cachedCard(id) })));
+    res.set('Cache-Control', 'no-store').json({ cards: cards.filter((c) => c.metadata) });
+  } catch (e) {
+    res.status(502).json({ error: String(e.message || e) });
+  }
+});
+
 async function loadCard(messageId) {
   const r = await nx.getMetadata(messageId);
   if (r.code !== 0 || !r.metadata || !r.metadata.bg) return null;
@@ -97,6 +166,7 @@ app.post('/api/requests/pledge', auth, async (req, res) => {
     patch.updatedAt = String(Date.now());
     const r = await nx.setMetadata({ messageId, userId: req.userId, channelId, metadata: patch });
     if (r.code !== 0) return res.status(502).json({ error: 'Nexconn metadata error', detail: r });
+    metaCache.delete(messageId);
     res.json({ metadata: { ...m, ...patch }, already });
   } catch (e) {
     res.status(502).json({ error: String(e.message || e) });
@@ -135,6 +205,7 @@ app.post('/api/requests/update', auth, async (req, res) => {
     } else return res.status(400).json({ error: 'Unknown action' });
     const r = await nx.setMetadata({ messageId, userId: req.userId, channelId, metadata: patch });
     if (r.code !== 0) return res.status(502).json({ error: 'Nexconn metadata error', detail: r });
+    metaCache.delete(messageId);
     res.json({ metadata: { ...m, ...patch } });
   } catch (e) {
     res.status(502).json({ error: String(e.message || e) });
