@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Redsure write-up</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap">
+<style>
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 10.4pt/1.5 Inter, sans-serif; color: #17171b; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .page { width: 210mm; min-height: 297mm; padding: 16mm 16mm 14mm; page-break-after: always; position: relative; }
+  .page:last-child { page-break-after: auto; }
+  h1, h2, h3 { font-family: Poppins, sans-serif; margin: 0; letter-spacing: -0.2px; }
+  h2 { font-size: 15pt; color: #c8102e; margin: 0 0 6px; }
+  h3 { font-size: 11pt; margin: 10px 0 4px; }
+  p { margin: 0 0 7px; }
+  .red { color: #c8102e; }
+  .muted { color: #5b6170; }
+  .cover { background: #c8102e; color: #fff; margin: -16mm -16mm 12px; padding: 18mm 16mm 12mm; }
+  .cover .brand { display: flex; align-items: center; gap: 10px; font: 800 30pt Poppins; }
+  .cover .tag { font: 700 17pt/1.25 Poppins; margin-top: 8px; max-width: 150mm; }
+  .cover .sub { margin-top: 10px; font-size: 11pt; opacity: .95; max-width: 160mm; }
+  .facts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 14px; }
+  .facts div { background: rgba(255,255,255,.14); border-radius: 10px; padding: 8px 10px; font-size: 8.6pt; }
+  .facts b { display: block; font-size: 10pt; word-break: break-all; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .box { border: 1px solid #ececf0; border-radius: 12px; padding: 10px 12px; background: #fff; }
+  .stat { font: 800 20pt/1 Poppins; color: #c8102e; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 8px 0 10px; }
+  .stats .box p { font-size: 8.8pt; margin: 4px 0 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 8.9pt; }
+  th, td { text-align: left; padding: 5px 7px; border-bottom: 1px solid #ececf0; vertical-align: top; }
+  th { background: #fdecef; color: #9b0c23; font-weight: 700; }
+  code { font: 8.2pt ui-monospace, Menlo, monospace; background: #f4f4f6; padding: 1px 4px; border-radius: 4px; }
+  ol, ul { margin: 0 0 7px; padding-left: 18px; }
+  li { margin: 2px 0; }
+  .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 8px 0 10px; }
+  .steps .box { font-size: 9pt; }
+  .steps b { display: block; font-family: Poppins; color: #c8102e; font-size: 10pt; }
+  .foot { position: absolute; bottom: 8mm; left: 16mm; right: 16mm; font-size: 8pt; color: #8a8f9c; display: flex; justify-content: space-between; }
+  .shots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 8px; }
+  .shots figure { margin: 0; }
+  .shots img { width: 100%; border-radius: 10px; border: 1px solid #e4e4ea; }
+  .shots figcaption { font-size: 8pt; color: #5b6170; margin-top: 3px; }
+  .note { background: #fff4e0; border: 1px solid #f5d9a8; border-radius: 10px; padding: 8px 10px; font-size: 9pt; color: #6b4200; }
+  a { color: #c8102e; }
+</style>
+</head>
+<body>
+
+<!-- PAGE 1 -->
+<section class="page">
+  <div class="cover">
+    <div class="brand"><svg width="40" height="40" viewBox="0 0 64 64"><path d="M32 4C22 20 12 31 12 42a20 20 0 0 0 40 0C52 31 42 20 32 4z" fill="#fff"/><path d="M23 41l6 6 12-13" stroke="#c8102e" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Redsure</div>
+    <div class="tag">The blood request that knows when it’s done.</div>
+    <div class="sub">A family posts a blood request once. Everyone who has it, even on an old WhatsApp forward, sees the moment it is fulfilled. Donors reach the family in a private chat, so the family’s phone number never spreads.</div>
+    <div class="facts">
+      <div>Track<b>Humanitarian &amp; Social Good</b></div>
+      <div>Nexconn App Key<b>8brlm7uf89223</b></div>
+      <div>Live app<b>{{LIVE_URL}}</b></div>
+      <div>Source<b>github.com/hannielvinu/Redsure</b></div>
+    </div>
+  </div>
+
+  <h2>Why we built it</h2>
+  <p>Almost everyone in India has seen it in a family or college group: <i>“URGENT! B-ve blood needed, 3 units, call this number, please forward to all groups.”</i> Nobody can tell whether it is still needed. Some of these messages are years old.</p>
+  <p>The usual explanation is “not enough donors”. But on paper India now collects about as much blood as it needs: <b>14.6 million units in 2024–25</b>, against an estimated need of about 14.6 million. What breaks is the <b>message</b>. A WhatsApp forward is a frozen copy. It can never say “done”.</p>
+  <div class="stats">
+    <div class="box"><div class="stat">2015 → 2021</div><p>A 2015–16 blood-donor list went viral again as a “plasma donors” list in 2020, and again in 2021 (Alt News, The Quint, NewsMeter fact-checks).</p></div>
+    <div class="box"><div class="stat">Since 1998</div><p>Paid blood donation is banned in India, yet Kerala Police warned of rising blood-donation scams in July 2025, and Delhi Police arrested a fake donor who took a “convenience fee”.</p></div>
+    <div class="box"><div class="stat">0.6 / 1,000</div><p>Median units in stock per 1,000 people (ORF, 2025), against a WHO benchmark of 10 donations per 1,000. Every real request matters, so people must not learn to ignore them.</p></div>
+  </div>
+  <p>So the family’s number keeps ringing after the need is over, scammers use the number to ask for money, and donors start ignoring every request, including the real one tonight. <b>This is a communication problem, and a chat platform can fix it.</b></p>
+
+  <h2 style="margin-top:10px">What Redsure does</h2>
+  <div class="steps">
+    <div class="box"><b>1 · Post once</b>The family picks blood group, units, hospital and deadline. One live card appears in their city room.</div>
+    <div class="box"><b>2 · Share the live link</b>They forward a link, not a frozen text. Whoever opens it, even days later, sees the current status.</div>
+    <div class="box"><b>3 · Donors offer privately</b>“I can donate” opens a private chat with the family. No phone numbers. Money asks get a warning.</div>
+    <div class="box"><b>4 · It closes itself</b>“+1 unit arranged” … “Fulfilled, please don’t call” updates on every screen and every forwarded link. Unclaimed requests expire.</div>
+  </div>
+  <p><b>Check a forward:</b> anyone can paste a forward they received. Redsure reads it (AI + rules), shows blood group, hospital, date and missing details, and says whether it matches a <span class="red">live</span>, <span style="color:#0f8a5f">fulfilled</span> or unknown request. It never calls a request “fake”; it says what it can and can’t confirm.</p>
+  <div class="foot"><span>Redsure · Nexconn Build Challenge 2026</span><span>1</span></div>
+</section>
+
+<!-- PAGE 2 -->
+<section class="page">
+  <h2>Nexconn SDK features we use, and where</h2>
+  <p class="muted">Package: <b>Nexconn Chat SDK for Web</b> (<code>@nexconn/chat</code> 26.5.1) on the client, <b>Platform Chat API</b> on our server. The App Secret never reaches the browser.</p>
+  <table>
+    <tr><th style="width:27%">Feature in Redsure</th><th style="width:38%">Nexconn capability</th><th>Where in the app</th></tr>
+    <tr><td><b>Live request card</b></td><td>Custom message type <code>RS:Request</code> (<code>registerCustomMessages</code>, <code>SendMessageParams</code>)</td><td>“Request blood” form → card in the city room</td></tr>
+    <tr><td><b>Status that changes in place</b></td><td><b>Message metadata</b> attached at send; updated via Platform API <code>message/metadata/set</code> (<code>isEchoToSender</code>); clients receive <code>onMessageMetadataUpdated</code></td><td>“I can donate”, “+1 unit arranged”, “Mark fulfilled”, “Extend”, “Close”: every member’s card updates instantly</td></tr>
+    <tr><td><b>Live share page and link preview</b></td><td>Platform API <code>message/metadata/list</code>. Nexconn metadata is our only database</td><td><code>/r/&lt;room&gt;/&lt;message&gt;</code> page; WhatsApp preview shows current status</td></tr>
+    <tr><td><b>City rooms</b></td><td><b>Group channels</b>: <code>group-channel/create</code>, <code>group-channel/join</code>, <code>GroupChannel.sendMessage</code></td><td>One room per city; members also chat in text</td></tr>
+    <tr><td><b>Room history</b></td><td><code>BaseChannel.createMessagesQuery</code> (remote message history)</td><td>Opening a room loads the last 60 cards and messages with their metadata</td></tr>
+    <tr><td><b>Private donor ↔ family chat</b></td><td><b>Direct channels</b>, <code>createChannelsQuery</code>, unread counts</td><td>“Chats” tab; auto intro message after a pledge</td></tr>
+    <tr><td><b>Typing indicator</b></td><td><code>sendTypingStatus</code> + <code>ChannelHandler.onTypingStatusChanged</code></td><td>“Priya is typing…” in chats</td></tr>
+    <tr><td><b>Translate</b></td><td><b>Built-in translation</b> <code>translateModule.translateMessages</code> + <code>TranslateHandler</code></td><td>“Translate” under each received chat message (8 Indian languages)</td></tr>
+    <tr><td><b>Login without passwords</b></td><td>Server-issued access tokens <code>auth/access-token/issue</code>; SHA1-signed requests; token refresh</td><td>First-name sign-up; auto reconnect</td></tr>
+    <tr><td><b>Reliability</b></td><td><code>ConnectionStatusHandler</code>; primary/backup API domain failover (5 s)</td><td>Green/grey connection dot; server retries the backup domain</td></tr>
+  </table>
+
+  <h3>Architecture</h3>
+  <svg viewBox="0 0 700 175" width="100%" style="font-family:Inter;font-size:11px">
+    <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#9b0c23"/></marker></defs>
+    <rect x="8" y="10" width="190" height="70" rx="12" fill="#fdecef" stroke="#c8102e"/><text x="103" y="36" text-anchor="middle" font-weight="700">Web app (phone browser)</text><text x="103" y="54" text-anchor="middle">Nexconn Chat SDK</text><text x="103" y="69" text-anchor="middle" fill="#5b6170">rooms · cards · chats</text>
+    <rect x="500" y="10" width="190" height="70" rx="12" fill="#16161a"/><text x="595" y="40" text-anchor="middle" fill="#fff" font-weight="700">Nexconn Chat cloud</text><text x="595" y="58" text-anchor="middle" fill="#fff">messages + metadata</text>
+    <rect x="254" y="100" width="190" height="66" rx="12" fill="#fff" stroke="#16161a"/><text x="349" y="126" text-anchor="middle" font-weight="700">Redsure server (Node)</text><text x="349" y="143" text-anchor="middle">tokens · pledges · status</text><text x="349" y="158" text-anchor="middle" fill="#5b6170">App Secret stays here</text>
+    <rect x="8" y="110" width="190" height="50" rx="12" fill="#e6f6ef" stroke="#0f8a5f"/><text x="103" y="132" text-anchor="middle" font-weight="700">Public live link</text><text x="103" y="148" text-anchor="middle">/r/room/message</text>
+    <rect x="500" y="110" width="190" height="50" rx="12" fill="#fff4e0" stroke="#b26a00"/><text x="595" y="132" text-anchor="middle" font-weight="700">LLM (Groq)</text><text x="595" y="148" text-anchor="middle">reads pasted forwards</text>
+    <line x1="198" y1="38" x2="498" y2="38" stroke="#9b0c23" stroke-width="2" marker-end="url(#a)"/><text x="348" y="31" text-anchor="middle" fill="#9b0c23">WebSocket: send / receive / metadata events</text>
+    <line x1="150" y1="80" x2="270" y2="100" stroke="#9b0c23" stroke-width="1.6" marker-end="url(#a)"/>
+    <line x1="430" y1="100" x2="545" y2="80" stroke="#9b0c23" stroke-width="1.6" marker-end="url(#a)"/><text x="525" y="97" fill="#9b0c23">signed Platform API</text>
+    <line x1="254" y1="135" x2="200" y2="135" stroke="#0f8a5f" stroke-width="1.6" marker-end="url(#a)"/>
+    <line x1="444" y1="135" x2="498" y2="135" stroke="#b26a00" stroke-width="1.6" marker-end="url(#a)"/>
+  </svg>
+  <p class="muted" style="font-size:9pt">The server is the single writer of counts, so two donors tapping at the same moment can’t overwrite each other. Only the family who posted can change progress.</p>
+  <div class="foot"><span>Redsure · Nexconn App Key 8brlm7uf89223</span><span>2</span></div>
+</section>
+
+<!-- PAGE 3 -->
+<section class="page">
+  <h2>What is new here</h2>
+  <ul>
+    <li><b>A message that stays true after it is forwarded.</b> Donor apps keep requests inside their own app. Redsure works where requests actually travel: the forwarded link carries the live status, and even the WhatsApp preview shows the current state.</li>
+    <li><b>Message metadata as the shared state.</b> The card is not a database row shown in a chat. It <i>is</i> the chat message; its progress lives in Nexconn message metadata and changes in place for every member.</li>
+    <li><b>Closing the loop.</b> Requests end as “Fulfilled”, “Closed” or “Expired”, never in silence. That stops the calls the family gets after the need is over.</li>
+    <li><b>Safety built into the chat.</b> No phone numbers, a warning on any money ask, and a forward checker that never calls a request “fake” and never invents details it can’t see in the text.</li>
+  </ul>
+
+  <h2 style="margin-top:8px">Screens</h2>
+  {{SHOTS}}
+
+  <h2 style="margin-top:10px">Business and growth</h2>
+  <div class="grid2">
+    <div class="box"><h3 style="margin-top:0">Who uses it</h3><p>Families who need blood (free, always). Donors who receive forwards. Blood-donor volunteer groups, college NSS units and hospital patient-help desks that today run donor WhatsApp groups by hand.</p></div>
+    <div class="box"><h3 style="margin-top:0">Who pays (plan)</h3><p>Blood banks, hospitals and donor NGOs: verified rooms with a “confirmed by blood bank” badge, request dashboards and alerts to donors by blood group and city. Families never pay.</p></div>
+    <div class="box"><h3 style="margin-top:0">Growth loop</h3><p>Every shared link is an invitation: a viewer who taps “I can donate” becomes a Redsure user and an active user on Nexconn. One request forwarded to 10 groups reaches hundreds of potential donors.</p></div>
+    <div class="box"><h3 style="margin-top:0">Roadmap</h3><p>1) Verified blood-bank rooms. 2) Donor alerts by blood group (Nexconn targeted group messages + push). 3) Same live card for oxygen, rare medicines and platelets. 4) Android app with the Nexconn Flutter SDK.</p></div>
+  </div>
+
+  <h2 style="margin-top:10px">Honest limits</h2>
+  <p>Built in the challenge window by a one-person team. No real users yet, so we report no traction numbers. Anyone can still post a false request; Redsure reduces harm by hiding numbers, warning on money and closing requests. The free host sleeps when idle, so the first visit can take up to a minute.</p>
+
+  <h3>Built for this challenge</h3>
+  <p>Everything was built from scratch for the Nexconn Build Challenge 2026. Stack: Nexconn Chat SDK for Web, Node.js/Express server with the Nexconn Platform Chat API, Vite, Groq LLM (optional). Tests: <code>npm test</code>. Sources: Alt News, The Quint and NewsMeter fact-checks; The South First (Kerala Police, Jul 2025); Medical Dialogues (Delhi arrest); ORF (2025); WHO India.</p>
+  <div class="foot"><span>Redsure · github.com/hannielvinu/Redsure</span><span>3</span></div>
+</section>
+</body>
+</html>
