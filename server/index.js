@@ -289,7 +289,7 @@ app.get('/api/stats', async (_req, res) => {
     const r = await nx.call('/v4/group-channel/profile/list', { channelIds: ids });
     const rooms = Object.fromEntries((r.result?.profiles || []).map((p) => [p.channelId, p.memberCount ?? null]));
     const total = Object.values(rooms).reduce((a, n) => a + (Number(n) || 0), 0);
-    const team = Number(process.env.TEAM_TEST_ACCOUNTS || 17);
+    const team = Number(process.env.TEAM_TEST_ACCOUNTS || 18);
     res.set('Cache-Control', 'no-store').json({
       roomMembers: rooms,
       totalRoomMemberships: total,
