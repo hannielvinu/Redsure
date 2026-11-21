@@ -677,7 +677,15 @@ function renderThread(main, peer) {
     b.textContent = 'Translating…';
     // Nexconn built-in translation; the result arrives in onTranslationCompleted.
     const r = await NCEngine.translateModule.translateMessages({ list: [new TranslateMessageParam(b.dataset.tr, 'auto', S.lang)] }).catch((x) => ({ code: -1, x }));
-    if (r.code !== 0) { S.translations.set(b.dataset.tr, `(translation not enabled for this app: code ${r.code})`); render(); }
+    if (r.code !== 0) {
+      // Built-in translation not enabled for this app: fall back to our server's AI translation.
+      const msg = d.messages.find((x) => x.id === b.dataset.tr);
+      try {
+        const t = await api('/api/translate', authBody({ text: msg?.text || '', lang: S.lang }));
+        S.translations.set(b.dataset.tr, t.text);
+      } catch { S.translations.set(b.dataset.tr, '(translation unavailable right now)'); }
+      render();
+    }
   };
   const input = main.querySelector('#dmt');
   let lastTyping = 0;

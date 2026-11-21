@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Nexconn } from './nexconn.js';
-import { readForward, normaliseGroup } from './forward.js';
+import { readForward, normaliseGroup, translateText } from './forward.js';
 import { CITIES, BLOOD_GROUPS, CARD_TYPE, MONEY_RE, roomId, liveStatus, publicView } from './shared.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -272,6 +272,14 @@ app.post('/api/check', async (req, res) => {
   const text = String(req.body?.text || '').trim();
   if (text.length < 10) return res.status(400).json({ error: 'Paste the full forwarded message.' });
   res.json(await readForward(text));
+});
+
+app.post('/api/translate', auth, async (req, res) => {
+  const { text, lang } = req.body;
+  if (!/^[a-z]{2}$/.test(lang || '') || !text) return res.status(400).json({ error: 'Bad request' });
+  const out = await translateText(text, lang);
+  if (!out) return res.status(503).json({ error: 'Translation unavailable' });
+  res.json({ text: out });
 });
 
 app.get('/healthz', (_req, res) => res.json({ ok: true, nexconn: nx.configured }));

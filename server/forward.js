@@ -110,3 +110,29 @@ export async function readForward(text) {
 }
 
 export { GROUPS };
+
+// Fallback translation (used only when Nexconn built-in translation is not enabled for the app).
+export async function translateText(text, lang) {
+  const key = process.env.GROQ_API_KEY;
+  if (!key) return null;
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: process.env.GROQ_MODEL || 'openai/gpt-oss-120b',
+        temperature: 0,
+        messages: [
+          { role: 'system', content: `Translate the user's chat message into the language with code "${lang}". Reply with the translation only, no notes.` },
+          { role: 'user', content: String(text).slice(0, 1000) },
+        ],
+      }),
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!res.ok) return null;
+    const j = await res.json();
+    return (j.choices?.[0]?.message?.content || '').trim() || null;
+  } catch {
+    return null;
+  }
+}
