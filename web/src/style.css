@@ -122,8 +122,8 @@ textarea.field { min-height: 130px; resize: vertical; }
 .hero h1 em { color: var(--red); font-style: normal; }
 .hero p { color: #4b5563; margin: 0 0 6px; }
 .promise { display: grid; gap: 10px; margin: 18px 0; }
-.promise div { display: flex; gap: 10px; align-items: flex-start; background: #fff; border-radius: 14px; padding: 12px; box-shadow: var(--shadow); font-size: 14px; }
-.promise span { font-size: 18px; }
+.promise > div { display: flex; gap: 10px; align-items: flex-start; background: #fff; border-radius: 14px; padding: 12px; box-shadow: var(--shadow); font-size: 14px; }
+.promise > div > span { font-size: 18px; }
 
 /* Chats list */
 .row { display: flex; align-items: center; gap: 12px; padding: 12px; background: #fff; border-radius: 14px; margin: 8px 0; box-shadow: var(--shadow); width: 100%; text-align: left; }
