@@ -282,6 +282,19 @@ app.post('/api/translate', auth, async (req, res) => {
   res.json({ text: out });
 });
 
+// Real usage: how many people have joined each city room (read from Nexconn group profiles).
+app.get('/api/stats', async (_req, res) => {
+  try {
+    const ids = CITIES.map((c) => roomId(c));
+    const r = await nx.call('/v4/group-channel/profile/list', { channelIds: ids });
+    const rooms = Object.fromEntries((r.result?.profiles || []).map((p) => [p.channelId, p.memberCount ?? null]));
+    const total = Object.values(rooms).reduce((a, n) => a + (Number(n) || 0), 0);
+    res.set('Cache-Control', 'no-store').json({ roomMembers: rooms, totalRoomMemberships: total, at: new Date().toISOString() });
+  } catch (e) {
+    res.status(502).json({ error: String(e.message || e) });
+  }
+});
+
 app.get('/healthz', (_req, res) => res.json({ ok: true, nexconn: nx.configured }));
 
 // Share links get live link-preview tags, so a WhatsApp preview already says "2 of 3 arranged" or "Fulfilled".
