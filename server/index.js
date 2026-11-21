@@ -289,7 +289,15 @@ app.get('/api/stats', async (_req, res) => {
     const r = await nx.call('/v4/group-channel/profile/list', { channelIds: ids });
     const rooms = Object.fromEntries((r.result?.profiles || []).map((p) => [p.channelId, p.memberCount ?? null]));
     const total = Object.values(rooms).reduce((a, n) => a + (Number(n) || 0), 0);
-    res.set('Cache-Control', 'no-store').json({ roomMembers: rooms, totalRoomMemberships: total, at: new Date().toISOString(), lastIndexSave });
+    const team = Number(process.env.TEAM_TEST_ACCOUNTS || 17);
+    res.set('Cache-Control', 'no-store').json({
+      roomMembers: rooms,
+      totalRoomMemberships: total,
+      teamTestAccounts: team,
+      otherPeople: Math.max(0, total - team),
+      note: 'Each person joins the city room they pick. Team test accounts (made while building and testing) are excluded from otherPeople. Someone who switches city is counted in each room.',
+      at: new Date().toISOString(),
+    });
   } catch (e) {
     res.status(502).json({ error: String(e.message || e) });
   }
